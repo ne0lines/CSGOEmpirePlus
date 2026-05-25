@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>CSGOEmpire Plus Options</title>
+  <style>
+    @font-face {
+      font-family: 'CSGOEmpire-Flama';
+      src: url('font/CSGOEmpire-Flama-Basic.woff2') format('woff2');
+      font-weight: normal;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'CSGOEmpire-Flama';
+      src: url('font/CSGOEmpire-Flama-Bold.woff2') format('woff2');
+      font-weight: 700;
+      font-style: normal;
+    }
+    * { box-sizing: border-box; font-family: 'CSGOEmpire-Flama', Arial, sans-serif; }
+    body { margin: 0; background: #1a1c24; color: #fff; font-size: 14px; }
+    main { max-width: 760px; margin: 32px auto; padding: 0 20px; }
+    h1 { margin: 0 0 20px; font-size: 22px; color: #e9b10e; }
+    section { border: 1px solid #333541; background: #24252f; border-radius: 8px; padding: 18px; margin-bottom: 16px; }
+    label { display: block; color: #9293a6; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+    input[type="password"], select {
+      width: 100%; height: 38px; border: 1px solid #333541; border-radius: 4px;
+      background: #141419; color: #fff; padding: 0 10px; outline: none;
+    }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .checks { display: grid; gap: 10px; }
+    .checks label { display: flex; align-items: center; gap: 8px; text-transform: none; font-size: 14px; font-weight: 400; color: #fff; margin: 0; }
+    button { height: 36px; border: 0; border-radius: 4px; padding: 0 14px; color: #141419; background: #e9b10e; font-weight: 700; cursor: pointer; }
+    button.secondary { background: #333541; color: #fff; }
+    .actions { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
+    #status { color: #9293a6; min-height: 20px; }
+    #status.ok { color: #01bf4d; }
+    #status.error { color: #ff5c5c; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>CSGOEmpire Plus Options</h1>
+
+    <section>
+      <label for="apiKey">Pricempire API-key</label>
+      <input id="apiKey" type="password" autocomplete="off" placeholder="Paste your Pricempire API-key">
+      <div class="actions">
+        <button id="save">Save</button>
+        <button id="test" class="secondary">Test connection</button>
+        <button id="clearCache" class="secondary">Clear cache</button>
+      </div>
+    </section>
+
+    <section>
+      <label for="currency">Currency</label>
+      <select id="currency">
+        <option>USD</option>
+        <option>EUR</option>
+        <option>SEK</option>
+        <option>GBP</option>
+        <option>BTC</option>
+      </select>
+    </section>
+
+    <div id="status"></div>
+  </main>
+  <script src="scripts/pricempire-utils.js"></script>
+  <script src="scripts/options.js"></script>
+</body>
+</html>

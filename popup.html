@@ -1,0 +1,62 @@
+<html style="--vh:11.38px;">
+<head>
+<meta charset="UTF-8" />
+<style>
+@font-face {
+    font-family: 'CSGOEmpire-Flama';
+    src: url('font/CSGOEmpire-Flama-Basic.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'CSGOEmpire-Flama';
+    src: url('font/CSGOEmpire-Flama-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'CSGOEmpire-Flama';
+    src: url('font/CSGOEmpire-Flama-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+}
+*{font-family:'CSGOEmpire-Flama';}
+body{min-width:265px;background-color:#24252F;color:#FFFFFF;font-weight:normal;font-size:14px;line-height:25.6px;}
+p{line-height:18px;}
+a{text-decoration:none;color:#E9B10E;}
+a:hover{text-decoration:underline;}
+b{display:block;color:#9293A6;text-transform:uppercase;font-weight:700;font-size:12px;line-height:14.4px;padding-bottom:8px;}
+h3{font-size:14px;font-style:italic;font-weight:700;line-height:24px;color:#E9B10E;}
+h3 i{color:#FFFFFF;font-style:italic;margin-right:1.25px;}
+h3 strong{color:#01BF4D;margin-left:1.25px;}
+div{display:inline-flex;border:1.25px solid #333541;border-radius:4px;padding:5px 0px 5px 12px;background-color:#141419;color:#9293A6;line-height:22.5px;text-align:left;}
+img{display:block;box-sizing:border-box;height:20px;width:20px;margin-right:4px;margin-bottom:3px;margin-top:3px;border-radius: 50%;line-height:22.5px;vertical-align:middle;text-size-adjust:100%;text-align:left;}
+input{display:inline-block;height:26px;box-sizing:border-box;border:0px none;outline:none;padding:0px;padding-left:8px;background-color:#141419;color:#FFFFFF;font-size:15px;line-height:16px;}
+span{display:block;white-space:nowrap;color:#9293a6;margin-top:8px;}
+span a{color:#9293a6;font-size:8px;text-decoration:underline;}
+.pe-limits{display:block;margin:12px 0 8px;}
+.pe-limits-card{display:block;border:1.25px solid #333541;border-radius:4px;padding:8px 10px;background-color:#141419;color:#9293A6;line-height:18px;text-align:left;}
+.pe-limits-card ul{margin:0;padding:0;list-style:none;}
+.pe-limits-card li{display:flex;justify-content:space-between;gap:14px;color:#9293A6;font-size:12px;line-height:18px;}
+.pe-limits-card li span{display:block;margin-top:0;white-space:nowrap;color:#9293A6;}
+.pe-limits-card strong{color:#FFFFFF;font-weight:700;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:135px;}
+.pe-limits-card .muted{color:#9293A6;font-size:12px;}
+.pe-limits-card .error{color:#ff8a8a;}
+</style>
+</head>
+<body>
+<h3><i>CSGO</i>EMPIRE<strong>Plus</strong></h3>
+Unofficial extension for <a href="https://csgoempire.com/r/ne0lines" target="_blank">CSGOEmpire</a>.<br />
+<p>Feel free to <a href="https://csgoempire.com/r/ne0lines" target="_blank">send a tip</a>💖</p>
+<p><a href="options.html" target="_blank">Open Options</a></p>
+<section class="pe-limits">
+<b>Pricempire API</b>
+<div class="pe-limits-card" id="pe-limits-card"><span class="muted">Loading limits...</span></div>
+</section>
+<div>
+<img src="https://avatars.steamstatic.com/f304c56851aade6ca0d172333d23f4a8d048e990_full.jpg" /><input type="text" value="76561198355562614" />
+</div>
+<span><a href="https://x.com/ne0lines" target="_blank">https://x.com/ne0lines</a></span>
+<script src="scripts/popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+name: Chrome Web Store release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      publish_type:
+        description: Chrome Web Store publish type
+        required: true
+        default: DEFAULT_PUBLISH
+        type: choice
+        options:
+          - DEFAULT_PUBLISH
+          - STAGED_PUBLISH
+      skip_review:
+        description: Attempt to skip review if Chrome Web Store allows it
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  upload:
+    name: Upload extension
+    runs-on: ubuntu-latest
+    env:
+      EXTENSION_NAME: csgoempire-plus
+      PUBLISH_TYPE: ${{ github.event.inputs.publish_type || 'DEFAULT_PUBLISH' }}
+      SKIP_REVIEW: ${{ github.event.inputs.skip_review || 'false' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate extension
+        run: |
+          node --test tests/*.test.js
+          for file in $(find scripts -name '*.js' | sort); do
+            node --check "$file"
+          done
+          node -e "JSON.parse(require('fs').readFileSync('manifest.json', 'utf8'));"
+
+      - name: Package extension
+        run: |
+          set -euo pipefail
+          VERSION="$(node -p "require('./manifest.json').version")"
+          ZIP_PATH="dist/${EXTENSION_NAME}-${VERSION}.zip"
+          mkdir -p dist
+          zip -r "$ZIP_PATH" \
+            manifest.json \
+            options.html \
+            popup.html \
+            css \
+            font \
+            images \
+            scripts \
+            thirdParty
+          echo "zip_path=$ZIP_PATH" >> "$GITHUB_ENV"
+          unzip -t "$ZIP_PATH"
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-extension-package
+          path: ${{ env.zip_path }}
+          if-no-files-found: error
+
+      - name: Get Chrome Web Store access token
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.CHROME_WEB_STORE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.CHROME_WEB_STORE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.CHROME_WEB_STORE_REFRESH_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$GOOGLE_CLIENT_ID"
+          test -n "$GOOGLE_CLIENT_SECRET"
+          test -n "$GOOGLE_REFRESH_TOKEN"
+
+          curl --fail-with-body -sS \
+            -X POST "https://oauth2.googleapis.com/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            --data-urlencode "client_id=$GOOGLE_CLIENT_ID" \
+            --data-urlencode "client_secret=$GOOGLE_CLIENT_SECRET" \
+            --data-urlencode "refresh_token=$GOOGLE_REFRESH_TOKEN" \
+            --data-urlencode "grant_type=refresh_token" \
+            > token-response.json
+
+          TOKEN="$(node -e "const fs=require('fs'); const json=JSON.parse(fs.readFileSync('token-response.json', 'utf8')); if (!json.access_token) throw new Error(JSON.stringify(json)); process.stdout.write(json.access_token);")"
+          echo "::add-mask::$TOKEN"
+          echo "access_token=$TOKEN" >> "$GITHUB_ENV"
+
+      - name: Upload to Chrome Web Store
+        env:
+          CHROME_WEB_STORE_PUBLISHER_ID: ${{ secrets.CHROME_WEB_STORE_PUBLISHER_ID }}
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CHROME_WEB_STORE_PUBLISHER_ID"
+          test -n "$CHROME_EXTENSION_ID"
+
+          ITEM_NAME="publishers/${CHROME_WEB_STORE_PUBLISHER_ID}/items/${CHROME_EXTENSION_ID}"
+          echo "item_name=$ITEM_NAME" >> "$GITHUB_ENV"
+
+          curl --fail-with-body -sS \
+            -X POST "https://chromewebstore.googleapis.com/upload/v2/${ITEM_NAME}:upload" \
+            -H "Authorization: Bearer $access_token" \
+            -H "Content-Type: application/zip" \
+            --data-binary "@$zip_path" \
+            > upload-response.json
+
+          node -e "const fs=require('fs'); const json=JSON.parse(fs.readFileSync('upload-response.json', 'utf8')); const state=json.uploadState || ''; if (/FAILED/i.test(state)) throw new Error(JSON.stringify(json)); console.log(JSON.stringify(json, null, 2));"
+
+      - name: Wait for upload processing
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 20); do
+            curl --fail-with-body -sS \
+              -H "Authorization: Bearer $access_token" \
+              "https://chromewebstore.googleapis.com/v2/${item_name}:fetchStatus" \
+              > status-response.json
+
+            STATE="$(node -e "const fs=require('fs'); const json=JSON.parse(fs.readFileSync('status-response.json', 'utf8')); process.stdout.write(json.lastAsyncUploadState || '');")"
+            echo "Upload state: ${STATE:-unknown}"
+            if echo "$STATE" | grep -qi 'FAILED'; then
+              cat status-response.json
+              exit 1
+            fi
+            if ! echo "$STATE" | grep -qi 'IN_PROGRESS'; then
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "Upload did not finish processing in time."
+          cat status-response.json
+          exit 1
+
+      - name: Submit Chrome Web Store publish
+        run: |
+          set -euo pipefail
+          node -e "const fs=require('fs'); const body={publishType:process.env.PUBLISH_TYPE, skipReview:process.env.SKIP_REVIEW === 'true'}; fs.writeFileSync('publish-request.json', JSON.stringify(body));"
+
+          curl --fail-with-body -sS \
+            -X POST "https://chromewebstore.googleapis.com/v2/${item_name}:publish" \
+            -H "Authorization: Bearer $access_token" \
+            -H "Content-Type: application/json" \
+            --data-binary "@publish-request.json" \
+            > publish-response.json
+
+          node -e "const fs=require('fs'); console.log(JSON.stringify(JSON.parse(fs.readFileSync('publish-response.json', 'utf8')), null, 2));"
