@@ -12,7 +12,6 @@
 
   "host_permissions": [
     "https://csgoempire.com/*",
-    "https://extension.ne0lines.xyz/*",
     "https://api.pricempire.com/*",
     "https://pricempire.com/*"
   ],
@@ -52,12 +51,10 @@
         "scripts/pricempire-utils.js",
         "thirdParty/apexcharts.min.js",
         "scripts/dom-content.js",
-        "scripts/chrome-background.js",
         "scripts/utility-functions.js",
         "scripts/bookmark-manager.js",
         "scripts/ui-manager.js",
         "scripts/grid-helper.js",
-        "scripts/pricing-fetcher.js",
         "scripts/network-sniffer.js",
         "scripts/table-enhancer.js",
         "scripts/route-handler.js",
