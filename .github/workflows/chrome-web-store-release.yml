@@ -153,11 +153,18 @@ jobs:
           set -euo pipefail
           node -e "const fs=require('fs'); const body={publishType:process.env.PUBLISH_TYPE, skipReview:process.env.SKIP_REVIEW === 'true'}; fs.writeFileSync('publish-request.json', JSON.stringify(body));"
 
-          curl --fail-with-body -sS \
+          HTTP_STATUS="$(curl -sS \
             -X POST "https://chromewebstore.googleapis.com/v2/${item_name}:publish" \
             -H "Authorization: Bearer $access_token" \
             -H "Content-Type: application/json" \
             --data-binary "@publish-request.json" \
-            > publish-response.json
+            -o publish-response.json \
+            -w "%{http_code}")"
+
+          if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -ge 300 ]; then
+            echo "Chrome Web Store publish failed with HTTP $HTTP_STATUS"
+            node -e "const fs=require('fs'); const text=fs.readFileSync('publish-response.json', 'utf8'); try { console.error(JSON.stringify(JSON.parse(text), null, 2)); } catch { console.error(text); }"
+            exit 1
+          fi
 
           node -e "const fs=require('fs'); console.log(JSON.stringify(JSON.parse(fs.readFileSync('publish-response.json', 'utf8')), null, 2));"
