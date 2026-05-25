@@ -83,14 +83,21 @@ jobs:
           test -n "$GOOGLE_CLIENT_SECRET"
           test -n "$GOOGLE_REFRESH_TOKEN"
 
-          curl --fail-with-body -sS \
+          HTTP_STATUS="$(curl -sS \
             -X POST "https://oauth2.googleapis.com/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             --data-urlencode "client_id=$GOOGLE_CLIENT_ID" \
             --data-urlencode "client_secret=$GOOGLE_CLIENT_SECRET" \
             --data-urlencode "refresh_token=$GOOGLE_REFRESH_TOKEN" \
             --data-urlencode "grant_type=refresh_token" \
-            > token-response.json
+            -o token-response.json \
+            -w "%{http_code}")"
+
+          if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -ge 300 ]; then
+            echo "Google OAuth token request failed with HTTP $HTTP_STATUS"
+            node -e "const fs=require('fs'); const json=JSON.parse(fs.readFileSync('token-response.json', 'utf8')); console.error(JSON.stringify({error: json.error, error_description: json.error_description}, null, 2));"
+            exit 1
+          fi
 
           TOKEN="$(node -e "const fs=require('fs'); const json=JSON.parse(fs.readFileSync('token-response.json', 'utf8')); if (!json.access_token) throw new Error(JSON.stringify(json)); process.stdout.write(json.access_token);")"
           echo "::add-mask::$TOKEN"
